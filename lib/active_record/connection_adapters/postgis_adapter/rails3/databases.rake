@@ -199,12 +199,7 @@ end
 ::RGeo::ActiveRecord::TaskHacker.modify('db:structure:dump', nil, 'postgis') do |config_|
   set_psql_env(config_)
   filename_ = ENV['DB_STRUCTURE'] || File.join(Rails.root, "db", "structure.sql")
-  search_path_ = config_["schema_search_path"].to_s.strip
-  search_path_ = search_path_.split(",").map{ |sp_| sp_.strip }
-  search_path_.delete('postgis')
-  search_path_ = ['public'] if search_path_.length == 0
-  search_path_ = search_path_.map{ |sp_| "--schema=#{sp_}" }.join(" ")
-  `pg_dump -i -U "#{config_["username"]}" -s -x -O -f #{filename_} #{search_path_} #{config_["database"]}`
+  `pg_dump -i -U "#{config_["username"]}" -s -x -O -f #{filename_} #{config_["database"]}`
 
   raise "Error dumping database" if $?.exitstatus == 1
   File.open(filename_, "a") { |f| f << "SET search_path TO #{ActiveRecord::Base.connection.schema_search_path};\n\n" }
