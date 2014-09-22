@@ -212,14 +212,15 @@ end
 
 ::RGeo::ActiveRecord::TaskHacker.modify('db:structure:load', nil, 'postgis') do |config_|
   set_psql_env(config_)
-  filename_ = ::File.join(::Rails.root, "db/#{::Rails.env}_structure.sql")
+  filename_ = ENV['DB_STRUCTURE'] || File.join(Rails.root, "db", "structure.sql")
   `psql -f #{filename_} #{config_["database"]}`
 end
 
 
 ::RGeo::ActiveRecord::TaskHacker.modify('db:test:clone_structure', 'test', 'postgis') do |config_|
   set_psql_env(config_)
-  `psql -U "#{config_["username"]}" -f #{::Rails.root}/db/#{::Rails.env}_structure.sql #{config_["database"]}`
+  filename_ = ENV['DB_STRUCTURE'] || File.join(Rails.root, "db", "structure.sql")
+  `psql -U "#{config_["username"]}" -f #{filename_} #{config_["database"]}`
 end
 
 
