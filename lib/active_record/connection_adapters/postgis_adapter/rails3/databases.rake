@@ -220,7 +220,7 @@ end
 ::RGeo::ActiveRecord::TaskHacker.modify('db:test:clone_structure', 'test', 'postgis') do |config_|
   set_psql_env(config_)
   filename_ = ENV['DB_STRUCTURE'] || File.join(Rails.root, "db", "structure.sql")
-  `psql -U "#{config_["username"]}" -f #{filename_} #{config_["database"]}`
+  `psql -f #{filename_} #{config_["database"]}`
 end
 
 
