@@ -8,10 +8,10 @@ module ActiveRecord  # :nodoc:
           ensure_installation_configs
         end
 
-        def setup_gis
+        def setup_gis(postgis_schema = nil)
           establish_su_connection
           if extension_names
-            setup_gis_from_extension
+            setup_gis_from_extension(postgis_schema)
           end
           establish_connection(configuration)
         end
@@ -22,7 +22,7 @@ module ActiveRecord  # :nodoc:
           extra_configs = {'encoding' => encoding}
           extra_configs['owner'] = username if has_su?
           connection.create_database(configuration['database'], configuration.merge(extra_configs))
-          setup_gis
+          setup_gis(configuration['postgis_schema'])
         rescue ::ActiveRecord::StatementInvalid => error
           if /database .* already exists/ === error.message
             raise ::ActiveRecord::Tasks::DatabaseAlreadyExists
@@ -102,13 +102,20 @@ module ActiveRecord  # :nodoc:
           end
         end
 
-        def setup_gis_from_extension
+        def setup_gis_from_extension(postgis_schema)
           extension_names.each do |extname|
             if extname == 'postgis_topology'
               raise ::ArgumentError, "'topology' must be in schema_search_path for postgis_topology" unless search_path.include?('topology')
               connection.execute("CREATE EXTENSION IF NOT EXISTS #{extname} SCHEMA topology")
             else
-              connection.execute("CREATE EXTENSION IF NOT EXISTS #{extname}")
+              if postgis_schema
+                schema = postgis_schema ? "WITH SCHEMA #{postgis_schema}" : ''
+                connection.execute("CREATE SCHEMA IF NOT EXISTS #{postgis_schema}")
+              else
+                schema = ''
+              end
+
+              connection.execute("CREATE EXTENSION IF NOT EXISTS #{extname} #{schema}")
             end
           end
         end
